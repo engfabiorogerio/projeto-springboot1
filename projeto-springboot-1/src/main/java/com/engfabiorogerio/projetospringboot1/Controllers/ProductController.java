@@ -20,6 +20,9 @@ import com.engfabiorogerio.projetospringboot1.dtos.ProductRecordDTO;
 import com.engfabiorogerio.projetospringboot1.models.ProductModel;
 import com.engfabiorogerio.projetospringboot1.repositories.ProductRepository;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import jakarta.validation.Valid;
 
 @RestController
@@ -38,18 +41,25 @@ public class ProductController {
 	}
 
 	@GetMapping("/products")
-	public ResponseEntity<List<ProductModel>> getAllProducts() {
-		return ResponseEntity.status(HttpStatus.OK).body(productRepository.findAll());
+	public ResponseEntity<List<ProductModel>> getAllProducts(){
+		List<ProductModel> productsList = productRepository.findAll();
+		if(!productsList.isEmpty()) {
+			for(ProductModel product : productsList) {
+				UUID id = product.getIdProduct();
+				product.add(linkTo(methodOn(ProductController.class).getOneProduct(id)).withSelfRel());
+			}
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(productsList);
 	}
 
 	@GetMapping("/products/{id}")
-	public ResponseEntity<Object> getOneProduct(@PathVariable(value = "id") UUID id) {
-		Optional<ProductModel> product0 = productRepository.findById(id);
-		if (product0.isEmpty()) {
+	public ResponseEntity<Object> getOneProduct(@PathVariable(value="id") UUID id){
+		Optional<ProductModel> productO = productRepository.findById(id);
+		if(productO.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found.");
 		}
-
-		return ResponseEntity.status(HttpStatus.OK).body(product0.get());
+		productO.get().add(linkTo(methodOn(ProductController.class).getAllProducts()).withRel("Products List"));
+		return ResponseEntity.status(HttpStatus.OK).body(productO.get());
 	}
 
 	@PutMapping("/products/{id}")
