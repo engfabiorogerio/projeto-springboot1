@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.engfabiorogerio.projetospringboot1.models.ProductModel;
 
 @Repository
-public interface ProductInterface extends JpaRepository<ProductModel, UUID> {
+public interface ProductRepository extends JpaRepository<ProductModel, UUID> {
 
 }
